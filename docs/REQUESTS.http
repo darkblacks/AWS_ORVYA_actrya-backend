@@ -1,0 +1,113 @@
+@base = http://localhost:3000/api
+@token = COLE_O_TOKEN_AQUI
+@projectId = COLE_PROJECT_ID
+@rootBoardId = COLE_ROOT_BOARD_ID
+@itemId = COLE_ITEM_ID
+
+### Saúde
+GET {{base}}/health
+
+### Cadastro
+POST {{base}}/auth/register
+Content-Type: application/json
+
+{"name":"Diego","email":"diego@example.com","password":"12345678"}
+
+### Login
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{"email":"diego@example.com","password":"12345678"}
+
+### Criar Kanban Layout personalizado
+POST {{base}}/layouts/kanbans
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name":"Limpeza - tarefas",
+  "columns":[
+    {"name":"Demanda","position":1,"isInitial":true},
+    {"name":"Andamento","position":2},
+    {"name":"Realizado","position":3,"isFinal":true}
+  ]
+}
+
+### Criar Card Layout simples
+POST {{base}}/layouts/cards
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name":"Card doméstico",
+  "fields":[
+    {"fieldKey":"title","label":"Título","fieldType":"text","position":1,"required":true,"showInKanban":true},
+    {"fieldKey":"description","label":"Descrição","fieldType":"textarea","position":2,"showInKanban":false}
+  ]
+}
+
+### Exemplo Card Layout com repeater de utensílios
+POST {{base}}/layouts/cards
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name":"Atividade com utensílios",
+  "fields":[
+    {"fieldKey":"title","label":"Título","fieldType":"text","position":1,"required":true},
+    {"fieldKey":"description","label":"Descrição","fieldType":"textarea","position":2},
+    {"fieldKey":"utensilios","label":"Utensílios","fieldType":"repeater","position":3,"config":{"fields":[{"key":"title","type":"text"},{"key":"description","type":"textarea"},{"key":"photoFileId","type":"image"}]}}
+  ]
+}
+
+### Criar projeto (já cria 3 instâncias + board raiz com padrão)
+POST {{base}}/projects
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"name":"Limpeza da casa","description":"Organização da limpeza doméstica"}
+
+### Configurar instância 1 (troque IDs pelos layouts criados)
+PATCH {{base}}/projects/{{projectId}}/instances/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"name":"Tarefa","kanbanLayoutId":"UUID_KANBAN","cardLayoutId":"UUID_CARD"}
+
+### Carregar board inteiro: board + colunas + cards
+GET {{base}}/boards/{{rootBoardId}}
+Authorization: Bearer {{token}}
+
+### Criar Cozinha na instância 1
+POST {{base}}/projects/{{projectId}}/items
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"boardId":"{{rootBoardId}}","data":{"title":"Cozinha","description":"Limpar a cozinha"}}
+
+### Abrir/criar Kanban filho da Cozinha (instância 2)
+POST {{base}}/projects/{{projectId}}/items/{{itemId}}/child-board
+Authorization: Bearer {{token}}
+
+### Mover/editar card
+PATCH {{base}}/projects/{{projectId}}/items/{{itemId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"position":2000,"data":{"title":"Cozinha","description":"Limpeza completa"}}
+
+### Histórico do projeto
+GET {{base}}/projects/{{projectId}}/actions?limit=100
+Authorization: Bearer {{token}}
+
+### Excluir card (soft delete)
+DELETE {{base}}/projects/{{projectId}}/items/{{itemId}}
+Authorization: Bearer {{token}}
+
+### Restaurar card excluído
+POST {{base}}/projects/{{projectId}}/items/{{itemId}}/restore
+Authorization: Bearer {{token}}
+
+### Linha do tempo global do usuário
+GET {{base}}/actions?limit=100
+Authorization: Bearer {{token}}
